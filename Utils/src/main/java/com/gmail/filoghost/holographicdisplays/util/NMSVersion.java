@@ -33,12 +33,17 @@ public enum NMSVersion {
 	v1_16_R1,
 	v1_16_R2,
 	v1_16_R3,
-	v1_17_R1;
+	v1_17_R1,
+	v1_18_R1;
 	
 	private static final NMSVersion CURRENT_VERSION = extractCurrentVersion();
 	
 	
 	private static NMSVersion extractCurrentVersion() {
+		if (true) {
+			return NMSVersion.v1_18_R1;
+		}
+
 		String nmsVersionName = VersionUtils.extractNMSVersion();
 		
 		if (nmsVersionName != null) {

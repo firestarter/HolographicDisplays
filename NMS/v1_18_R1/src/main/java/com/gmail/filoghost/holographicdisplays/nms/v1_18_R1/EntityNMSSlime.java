@@ -12,7 +12,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
-package com.gmail.filoghost.holographicdisplays.nms.v1_17_R1;
+package com.gmail.filoghost.holographicdisplays.nms.v1_18_R1;
 
 import com.gmail.filoghost.holographicdisplays.api.line.HologramLine;
 import com.gmail.filoghost.holographicdisplays.nms.interfaces.entity.NMSEntityBase;
@@ -20,35 +20,35 @@ import com.gmail.filoghost.holographicdisplays.nms.interfaces.entity.NMSSlime;
 import com.gmail.filoghost.holographicdisplays.util.ConsoleLogger;
 import com.gmail.filoghost.holographicdisplays.util.reflection.ReflectField;
 import com.google.common.collect.ImmutableList;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.chat.IChatBaseComponent;
-import net.minecraft.server.level.EntityPlayer;
-import net.minecraft.sounds.SoundEffect;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.EntityDamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.entity.monster.EntitySlime;
-import net.minecraft.world.level.World;
-import net.minecraft.world.phys.AxisAlignedBB;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.phys.AABB;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_18_R1.entity.CraftEntity;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 
+import javax.annotation.Nullable;
 import java.util.logging.Level;
 
-public class EntityNMSSlime extends EntitySlime implements NMSSlime {
+public class EntityNMSSlime extends Slime implements NMSSlime {
 	
-	private static final ReflectField<Entity> VEHICLE_FIELD = new ReflectField<>(Entity.class, "av");
+	private static final ReflectField<Entity> VEHICLE_FIELD = new ReflectField<>(Entity.class, "au");
 
 	private HologramLine parentPiece;
 	private CraftEntity customBukkitEntity;
 	
-	public EntityNMSSlime(World world, HologramLine parentPiece) {
-		super(EntityTypes.aD, world);
-		super.setPersistent();
+	public EntityNMSSlime(net.minecraft.world.level.Level world, HologramLine parentPiece) {
+		super(EntityType.SLIME, world);
+		super.setPersistenceRequired();
 		super.collides = false;
-		a(0.0F, 0.0F);
+		// a(0.0F, 0.0F); // TODO ?
 		setSize(1, false);
 		setInvisible(true);
 		this.parentPiece = parentPiece;
@@ -60,7 +60,7 @@ public class EntityNMSSlime extends EntitySlime implements NMSSlime {
 		// Disable normal ticking for this entity.
 		
 		// So it won't get removed.
-		super.R /* tickCount */ = 0;
+		super.tickCount = 0;
 	}
 	
 	@Override
@@ -68,101 +68,96 @@ public class EntityNMSSlime extends EntitySlime implements NMSSlime {
 		// Disable normal ticking for this entity.
 		
 		// So it won't get removed.
-		super.R /* tickCount */ = 0;
+		super.tickCount = 0;
 	}
-	
+
 	@Override
-	public void setPosition(double d0, double d1, double d2) {
+	public void setPos(double d0, double d1, double d2) {
 		// Do not change it!
 	}
 	
-	public void forceSetBoundingBox(AxisAlignedBB boundingBox) {
-		super.a(boundingBox);
-	}
-	
-	@Override
-	public void saveData(NBTTagCompound nbttagcompound) {
-		// Do not save NBT.
+	public void forceSetBoundingBox(AABB boundingBox) {
+		super.setBoundingBox(boundingBox);
 	}
 
 	@Override
-	public boolean d(NBTTagCompound nbttagcompound) {
+	public boolean save(CompoundTag nbttagcompound) {
 		// Do not save NBT.
 		return false;
 	}
 
 	@Override
-	public boolean e(NBTTagCompound nbttagcompound) {
+	public boolean saveAsPassenger(CompoundTag nbttagcompound) {
 		// Do not save NBT.
 		return false;
 	}
-	
+
 	@Override
-	public NBTTagCompound save(NBTTagCompound nbttagcompound) {
+	public CompoundTag saveWithoutId(CompoundTag nbttagcompound) {
 		// Do not save NBT.
 		return nbttagcompound;
 	}
-	
+
 	@Override
-	public void load(NBTTagCompound nbttagcompound) {
+	public void readAdditionalSaveData(CompoundTag nbttagcompound) {
 		// Do not load NBT.
 	}
-	
+
 	@Override
-	public void loadData(NBTTagCompound nbttagcompound) {
+	public void addAdditionalSaveData(CompoundTag nbttagcompound) {
 		// Do not load NBT.
 	}
-	
+
 	@Override
-	public boolean damageEntity(DamageSource damageSource, float amount) {
-		if (damageSource instanceof EntityDamageSource) {
-			EntityDamageSource entityDamageSource = (EntityDamageSource) damageSource;
-			if (entityDamageSource.getEntity() instanceof EntityPlayer) {
-				Bukkit.getPluginManager().callEvent(new PlayerInteractEntityEvent(((EntityPlayer) entityDamageSource.getEntity()).getBukkitEntity(), getBukkitEntity())); // Bukkit takes care of the exceptions
+	protected boolean damageEntity0(DamageSource damagesource, float f) {
+		if (damagesource instanceof EntityDamageSource) {
+			EntityDamageSource entityDamageSource = (EntityDamageSource) damagesource;
+			if (entityDamageSource.getEntity() instanceof ServerPlayer) {
+				Bukkit.getPluginManager().callEvent(new PlayerInteractEntityEvent(((ServerPlayer) entityDamageSource.getEntity()).getBukkitEntity(), getBukkitEntity())); // Bukkit takes care of the exceptions
 			}
 		}
 		return false;
 	}
-	
+
 	@Override
-	public boolean isInvulnerable(DamageSource source) {
+	public boolean isInvulnerable() {
 		/*
 		 * The field Entity.invulnerable is private.
 		 * It's only used while saving NBTTags, but since the entity would be killed
 		 * on chunk unload, we prefer to override isInvulnerable().
 		 */
-	    return true;
+		return true;
 	}
-	
+
 	@Override
-	public boolean isCollidable() {
+	public boolean canBeCollidedWith() {
 		return false;
 	}
 
 	@Override
-	public void setCustomName(IChatBaseComponent ichatbasecomponent) {
+	public void setCustomName(@Nullable Component ichatbasecomponent) {
 		// Locks the custom name.
 	}
-	
+
 	@Override
 	public void setCustomNameVisible(boolean visible) {
 		// Locks the custom name.
 	}
-	
+
 	@Override
-	public void playSound(SoundEffect soundeffect, float f, float f1) {
-	    // Remove sounds.
+	public void playSound(SoundEvent soundeffect, float f, float f1) {
+		// Remove sounds.
 	}
-	
+
 	@Override
-	public void killEntity() {
+	public void kill() {
 		// Prevent being killed.
 	}
 	
 	@Override
 	public CraftEntity getBukkitEntity() {
 		if (customBukkitEntity == null) {
-			customBukkitEntity = new CraftNMSSlime(super.getWorld().getCraftServer(), this);
+			customBukkitEntity = new CraftNMSSlime(super.getLevel().getCraftServer(), this);
 	    }
 		return customBukkitEntity;
 	}
@@ -174,12 +169,12 @@ public class EntityNMSSlime extends EntitySlime implements NMSSlime {
 	
 	@Override
 	public void killEntityNMS() {
-		super.setRemoved(RemovalReason.b /* DISCARDED */);
+		super.setRemoved(RemovalReason.DISCARDED);
 	}
 	
 	@Override
 	public void setLocationNMS(double x, double y, double z) {
-		super.setPosition(x, y, z);
+		super.setPos(x, y, z);
 	}
 	
 	@Override
@@ -210,11 +205,11 @@ public class EntityNMSSlime extends EntitySlime implements NMSSlime {
 			if (super.getVehicle() != null) {
 				Entity oldVehicle = super.getVehicle();
 				VEHICLE_FIELD.set(this, null);
-				oldVehicle.at /* passengers */ = ImmutableList.of();
+				oldVehicle.passengers = ImmutableList.of();
 			}
 
 			VEHICLE_FIELD.set(this, entity);
-			entity.at /* passengers */ = ImmutableList.of(this);
+			entity.passengers = ImmutableList.of(this);
 
 		} catch (Throwable t) {
 			ConsoleLogger.logDebug(Level.SEVERE, "Couldn't set passenger", t);
